@@ -1,0 +1,9 @@
+.uvenv/
+__pycache__/
+
+data/
+model/
+vector_store/
+other/
+
+TODO
