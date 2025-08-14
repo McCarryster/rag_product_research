@@ -7,16 +7,16 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores.faiss import FAISS
 from langchain_huggingface import HuggingFaceEmbeddings
 
-from config import *
 from extract_text import extract_texts_from_folder
+from config import *
 
 class VectorStoreBuilder:
     def __init__(
         self,
         embedding_model_name: str,
         vectorstore_path: str,
-        chunk_size: int = 1000,
-        chunk_overlap: int = 100,
+        chunk_size: int,
+        chunk_overlap: int,
         device: str = "cpu"
     ):
         self.embedding_model_name = embedding_model_name
@@ -70,7 +70,7 @@ class VectorStoreBuilder:
 
     def _prepare_documents(self, texts: Dict[str, str]) -> List[Document]:
         """
-        Преобразует словарь {filename: text} в список Document с uid=filename
+        Converts a dictionary {filename: text} into a list of Document objects with uid=filename.
         """
         docs = []
         for fname, text in texts.items():
@@ -84,14 +84,14 @@ class VectorStoreBuilder:
 
     def add_texts(self, texts: Dict[str, str]):
         """
-        Добавляет новые документы из словаря {filename: text} в vectorstore.
-        Создаёт vectorstore, если её ещё нет.
+        Adds new documents from the dictionary {filename: text} to the vectorstore.
+        Creates the vectorstore if it does not exist yet.
         """
         self.load_vectorstore()
         docs = self._prepare_documents(texts)
         new_docs = self.filter_new_documents(docs)
         if not new_docs:
-            print("[INFO] Нет новых документов для добавления.")
+            print("[INFO] No new documents to add.")
             return
 
         splitter = self._get_splitter()
@@ -103,7 +103,7 @@ class VectorStoreBuilder:
             self.vectorstore.add_documents(split_docs)
 
         self.save_vectorstore()
-        print(f"[INFO] Добавлено {len(split_docs)} чанков из {len(new_docs)} новых документов.")
+        print(f"[INFO] Added {len(split_docs)} chunks out of {len(new_docs)} new docs.")
 
     def save_vectorstore(self):
         if self.vectorstore is not None:
@@ -111,6 +111,7 @@ class VectorStoreBuilder:
             self.vectorstore.save_local(self.vectorstore_path)
 
     def cleanup(self):
+        # If gonna depoy to clean memory
         self.vectorstore = None
         self.embedding_model = None
         self.splitter = None
@@ -119,9 +120,9 @@ class VectorStoreBuilder:
             torch.cuda.empty_cache()
 
 if __name__ == "__main__":
-    texts = extract_texts_from_folder(vectorstore_path)
+    texts = extract_texts_from_folder(data_dir)
     builder = VectorStoreBuilder(
-        embedding_model_name="BAAI/bge-m3",
+        embedding_model_name=embedding_model_name,
         chunk_size=chunk_size,
         chunk_overlap=chunk_overlap,
         device=device,

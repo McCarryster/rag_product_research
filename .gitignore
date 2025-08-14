@@ -6,4 +6,6 @@ model/
 vector_store/
 other/
 
+config.py
+
 TODO
